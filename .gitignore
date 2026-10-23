@@ -22,3 +22,23 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# Local credentials and keys
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+config/local/
+
+# Build and local verification artifacts
+**/target/
+artifacts/
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

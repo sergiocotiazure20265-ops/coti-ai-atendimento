@@ -1,0 +1,49 @@
+name: coti-ai-atendimento
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.2-pg16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: coti_conhecimento
+      POSTGRES_USER: coti_bootstrap
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no ambiente ou .env privado}
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256 --auth-local=scram-sha-256
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      DB_MIGRATION_PASSWORD: ${DB_MIGRATION_PASSWORD:?Defina DB_MIGRATION_PASSWORD no ambiente ou .env privado}
+      DB_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no ambiente ou .env privado}
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/bootstrap:/docker-entrypoint-initdb.d:ro
+    networks:
+      - dados
+      - operacao_local
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -q -h 127.0.0.1 -U coti_bootstrap -d coti_conhecimento"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  postgres_data:
+
+networks:
+  servicos:
+    driver: bridge
+  dados:
+    driver: bridge
+    internal: true
+  # A container attached only to an internal network has no published ports
+  # on Docker Engine 29. This bridge is exclusively for local DB operation.
+  operacao_local:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "false"
